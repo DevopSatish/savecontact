@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+  <title>Blind Person Phone Number App</title>
+  <style>
+   body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 3em;
+  color: #333;
+  text-shadow: 2px 2px 5px #ccc;
+}
+
+p {
+  text-align: center;
+  font-size: 1.2em;
+  color: #666;
+}
+
+button {
+  display: block;
+  margin: 50px auto;
+  padding: 15px 30px;
+  border: none;
+  background-color: #4CAF50;
+  color: #fff;
+  font-size: 1.2em;
+  cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px #ccc;
+  transition: background-color 0.2s ease-in-out;
+}
+
+button:hover {
+  background-color: #3e8e41;
+}
+
+#output {
+  margin: 50px auto;
+  padding: 20px;
+  max-width: 500px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px #ccc;
+  text-align: center;
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+input[type="text"] {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  border: none;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  box-shadow: 2px 2px 5px #ccc;
+  font-size: 1.2em;
+  color: #333;
+  width: 80%;
+  transition: background-color 0.2s ease-in-out;
+}
+
+input[type="text"]:focus {
+  background-color: #fff;
+}
+
+#loader {
+  display: none;
+  margin-top: 20px;
+  text-align: center;
+}
+
+#loader img {
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Media queries for mobile devices */
+@media only screen and (max-width: 480px) {
+  h1 {
+    font-size: 2em;
+  }
+
+  p {
+    font-size: 1em;
+  }
+
+  button {
+    font-size: 1em;
+    padding: 10px 20px;
+  }
+
+  input[type="text"] {
+    font-size: 1em;
+    padding: 5px 10px;
+  }
+}
+</style>
+
+</head>
+
+  <body>
+    <h1>Welcome to the Blind Person Phone Number App</h1>
+    <p>Click the button below to start.</p>
+    <button onclick="startApp()">Start App</button>
+
+    <div id="output"></div>
+
+    <script>
+      function startApp() {
+        const outputDiv = document.getElementById("output");
+
+        function transcribeSpeech() {
+          const msg1 = new SpeechSynthesisUtterance(`What is your name?`);
+          speechSynthesis.speak(msg1);
+          outputDiv.innerHTML = "What is your name?";
+          const recognition = new webkitSpeechRecognition();
+          recognition.start();
+          recognition.onresult = (event) => {
+            const result = event.results[0][0].transcript;
+            outputDiv.innerHTML += "<br>" + result;
+            confirmName(result);
+          };
+        }
+
+        function confirmName(name) {
+          outputDiv.innerHTML = `${name}, is that your name?`;
+          const msg = new SpeechSynthesisUtterance(
+            `${name}, is that your name?`
+          );
+          speechSynthesis.speak(msg);
+          msg.onend = () => {
+            const confirmation = new webkitSpeechRecognition();
+            confirmation.start();
+            confirmation.onresult = (event) => {
+              const response = event.results[0][0].transcript;
+              outputDiv.innerHTML += "<br>" + response;
+              if (response === "yes") {
+                askCountry();
+              } else {
+                transcribeSpeech();
+              }
+            };
+          };
+        }
+
+        function askCountry() {
+          outputDiv.innerHTML = "Which country do you belong to?";
+          const msg = new SpeechSynthesisUtterance(
+            "Which country do you belong to?"
+          );
+          speechSynthesis.speak(msg);
+          msg.onend = () => {
+            const countryRecog = new webkitSpeechRecognition();
+            countryRecog.start();
+            countryRecog.onresult = (event) => {
+              const country = event.results[0][0].transcript;
+              outputDiv.innerHTML += "<br>" + country;
+              const countryCode = getCountryCode(country);
+              if (countryCode) {
+                askPhoneNumber(countryCode);
+              } else {
+                askCountry();
+              }
+            };
+          };
+        }
+        function getCountryCode(country) {
+          const countryCodes = {
+            India: "+91",
+            "United States": "+1",
+            Canada: "+1",
+            "United Kingdom": "+44",
+            Australia: "+61",
+            // add more countries and codes as needed
+          };
+          return countryCodes[country];
+        }
+
+        function askPhoneNumber(countryCode) {
+          outputDiv.innerHTML = `Please enter your 10-digit phone number, starting with ${countryCode}`;
+          const msg = new SpeechSynthesisUtterance(
+            `Please enter your 10-digit phone number, starting with ${countryCode}`
+          );
+          speechSynthesis.speak(msg);
+          msg.onend = () => {
+            const numberRecog = new webkitSpeechRecognition();
+            numberRecog.start();
+            numberRecog.onresult = (event) => {
+              const number = event.results[0][0].transcript.replace(/\s/g, "");
+              outputDiv.innerHTML += "<br>" + number;
+              confirmPhoneNumber(number);
+            };
+          };
+        }
+
+        function confirmPhoneNumber(number) {
+          outputDiv.innerHTML = `Your phone number is ${number}, is that correct?`;
+          const msg = new SpeechSynthesisUtterance(
+            `Your phone number is ${number}, is that correct?`
+          );
+          speechSynthesis.speak(msg);
+          msg.onend = () => {
+            const confirmation = new webkitSpeechRecognition();
+            confirmation.start();
+            confirmation.onresult = (event) => {
+              const response = event.results[0][0].transcript;
+              outputDiv.innerHTML += "<br>" + response;
+              if (response === "yes") {
+                const msg2 = new SpeechSynthesisUtterance(
+                  `Phone number confirmed! contact saved successfully! Thank you have a great day!!`
+                );
+                speechSynthesis.speak(msg2);
+                outputDiv.innerHTML += " <br>Phone number confirmed!";
+                // Perform any necessary action with the phone number here
+              } else {
+                askPhoneNumber();
+              }
+            };
+          };
+        }
+
+        transcribeSpeech();
+      }
+    </script>
+  </body>
+</html>
